@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jim's Language Tool - Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 30px;
+      line-height: 1.6;
+      background: #f8f9fa;
+    }
+    
+    h1 {
+      color: #4a90e2;
+      margin-bottom: 10px;
+    }
+    
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .instructions {
+      background: #fff3cd;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #ffc107;
+      margin-bottom: 30px;
+    }
+    
+    .instructions ol {
+      margin: 10px 0 0 20px;
+    }
+    
+    .test-section {
+      margin: 30px 0;
+    }
+    
+    h2 {
+      color: #2c3e50;
+      border-bottom: 2px solid #e1e8ed;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px solid #e1e8ed;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #4a90e2;
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .example {
+      background: #e3f2fd;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #1976d2;
+    }
+    
+    .note {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jim's Language Tool - Test Page</h1>
+  
+  <div class="instructions">
+    <strong>📝 Testing Instructions:</strong>
+    <ol>
+      <li>Click the extension icon and add this page to allowed URLs</li>
+      <li>Open browser console (F12) to see debug messages</li>
+      <li>Type in the fields below and wait 1 second</li>
+      <li>Fields with errors will get a red border on the bottom</li>
+      <li>Click on the field to see all errors</li>
+      <li><strong>Click any green button to fix that error!</strong></li>
+      <li><strong>Double-click any word to get synonyms!</strong></li>
+    </ol>
+  </div>
+
+  <div class="container">
+    <div class="test-section">
+      <h2>Test 1: Spelling Errors</h2>
+      <p>Try typing this:</p>
+      <div class="example">I recieve alot of emails. Its definately wierd.</div>
+      <input type="text" placeholder="Type here...">
+    </div>
+
+    <div class="test-section">
+      <h2>Test 2: Grammar Errors</h2>
+      <p>Try typing this:</p>
+      <div class="example">Me and him went to the store. We was happy.</div>
+      <textarea placeholder="Type here..."></textarea>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 3: Mixed Errors</h2>
+      <p>Try typing this:</p>
+      <div class="example">Their going to there house. Its been a long time since I seen them.</div>
+      <textarea placeholder="Type here..."></textarea>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 4: Complex Sentence</h2>
+      <p>Try typing this:</p>
+      <div class="example">The report that was written by the team were comprehensive and it include many recommendations that should of been implemented sooner.</div>
+      <textarea placeholder="Type here..."></textarea>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Note:</strong> This extension uses LanguageTool's free public API. 
+    There's a slight delay (1 second) after you stop typing before checking begins. 
+    The free API has rate limits, so avoid checking very frequently.
+  </div>
+
+  <script>
+    console.log('Jim\'s Language Tool Test Page loaded');
+    console.log('Current URL:', window.location.hostname);
+    console.log('Add this URL to the extension to enable checking');
+  </script>
+</body>
+</html>

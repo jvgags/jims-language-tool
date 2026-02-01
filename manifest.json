@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Jim's Language Tool",
+  "version": "1.0",
+  "description": "Grammar and spell checking using LanguageTool - only on URLs you specify",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.languagetool.org/*",
+    "https://api.datamuse.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
