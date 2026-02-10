@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jim's Language Tool - Test Page</title>
+  <title>Jim's Language Tool - Enhanced Test Page</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -19,6 +19,17 @@
       margin-bottom: 10px;
     }
     
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
     .container {
       background: white;
       padding: 30px;
@@ -28,15 +39,62 @@
     }
     
     .instructions {
-      background: #fff3cd;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
       padding: 20px;
       border-radius: 8px;
-      border-left: 4px solid #ffc107;
       margin-bottom: 30px;
+    }
+    
+    .instructions strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 10px;
     }
     
     .instructions ol {
       margin: 10px 0 0 20px;
+    }
+    
+    .highlight-demo {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .highlight-demo strong {
+      color: #856404;
+    }
+    
+    .color-key {
+      display: flex;
+      gap: 20px;
+      margin: 15px 0;
+    }
+    
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .color-box {
+      width: 60px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    
+    .spelling-color {
+      background-color: rgba(231, 76, 60, 0.15);
+      border-bottom: 2px wavy #e74c3c;
+    }
+    
+    .grammar-color {
+      background-color: rgba(52, 152, 219, 0.15);
+      border-bottom: 2px wavy #3498db;
     }
     
     .test-section {
@@ -50,7 +108,7 @@
       margin-bottom: 15px;
     }
     
-    input, textarea {
+    input, textarea, .editable-div {
       width: 100%;
       padding: 15px;
       font-size: 16px;
@@ -59,9 +117,10 @@
       margin: 10px 0;
       font-family: inherit;
       transition: border-color 0.2s;
+      line-height: 1.5;
     }
     
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, .editable-div:focus {
       outline: none;
       border-color: #4a90e2;
     }
@@ -69,6 +128,16 @@
     textarea {
       min-height: 120px;
       resize: vertical;
+    }
+    
+    .editable-div {
+      min-height: 120px;
+      background: #fff;
+    }
+    
+    .editable-div:empty:before {
+      content: attr(data-placeholder);
+      color: #999;
     }
     
     .example {
@@ -89,64 +158,143 @@
       font-size: 14px;
       color: #666;
     }
+    
+    .feature-list {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .feature-list ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    
+    .feature-list li {
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
-  <h1>Jim's Language Tool - Test Page</h1>
+  <h1>Jim's Language Tool <span class="badge">ENHANCED</span></h1>
   
   <div class="instructions">
-    <strong>📝 Testing Instructions:</strong>
+    <strong>🎯 New: Inline Error Highlighting!</strong>
     <ol>
       <li>Click the extension icon and add this page to allowed URLs</li>
-      <li>Open browser console (F12) to see debug messages</li>
-      <li>Type in the fields below and wait 1 second</li>
-      <li>Fields with errors will get a red border on the bottom</li>
-      <li>Click on the field to see all errors</li>
-      <li><strong>Click any green button to fix that error!</strong></li>
-      <li><strong>Double-click any word to get synonyms!</strong></li>
+      <li>Type in the contenteditable fields below</li>
+      <li>Wait 1 second - errors will appear with colored underlines!</li>
+      <li><strong style="color: #ffeb3b;">🔴 Red wavy = Spelling errors</strong></li>
+      <li><strong style="color: #ffeb3b;">🔵 Blue wavy = Grammar errors</strong></li>
+      <li>Click any underlined error to see fixes</li>
+      <li>Click "🚫 Ignore" to dismiss false positives</li>
+      <li>Double-click any word for synonyms!</li>
     </ol>
   </div>
 
+  <div class="highlight-demo">
+    <strong>What You'll See:</strong>
+    <div class="color-key">
+      <div class="color-item">
+        <div class="color-box spelling-color"></div>
+        <span>Spelling errors (red wavy underline)</span>
+      </div>
+      <div class="color-item">
+        <div class="color-box grammar-color"></div>
+        <span>Grammar errors (blue wavy underline)</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
-    <div class="test-section">
-      <h2>Test 1: Spelling Errors</h2>
-      <p>Try typing this:</p>
-      <div class="example">I recieve alot of emails. Its definately wierd.</div>
-      <input type="text" placeholder="Type here...">
+    <div class="feature-list">
+      <strong>✨ Enhanced Features:</strong>
+      <ul>
+        <li>✅ Errors appear directly in your text with colored underlines</li>
+        <li>✅ Click individual errors for instant fixes</li>
+        <li>✅ Click "🚫 Ignore" to dismiss false positives</li>
+        <li>✅ Works perfectly with Substack, Medium, and contenteditable fields</li>
+        <li>✅ Preserves your cursor position while checking</li>
+        <li>✅ Hover over errors to see them highlight</li>
+      </ul>
     </div>
 
     <div class="test-section">
-      <h2>Test 2: Grammar Errors</h2>
+      <h2>Test 1: Contenteditable Div (Like Substack!) ⭐</h2>
       <p>Try typing this:</p>
-      <div class="example">Me and him went to the store. We was happy.</div>
-      <textarea placeholder="Type here..."></textarea>
+      <div class="example">I recieve alot of emails. Its definately wierd. Their going to there house.</div>
+      <div class="editable-div" contenteditable="true" data-placeholder="Type here to see inline error highlighting..."></div>
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 This field supports inline highlighting - errors will appear with colored underlines!
+      </p>
     </div>
 
     <div class="test-section">
-      <h2>Test 3: Mixed Errors</h2>
+      <h2>Test 2: Rich Text Area ⭐</h2>
       <p>Try typing this:</p>
-      <div class="example">Their going to there house. Its been a long time since I seen them.</div>
-      <textarea placeholder="Type here..."></textarea>
+      <div class="example">Me and him went to the store. We was happy. I seen them yesterday.</div>
+      <div class="editable-div" contenteditable="true" data-placeholder="Type here for grammar checking..."></div>
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 Click on any red or blue underline to see suggestions and fix instantly!
+      </p>
     </div>
 
     <div class="test-section">
-      <h2>Test 4: Complex Sentence</h2>
+      <h2>Test 3: Complex Mixed Errors ⭐</h2>
       <p>Try typing this:</p>
       <div class="example">The report that was written by the team were comprehensive and it include many recommendations that should of been implemented sooner.</div>
-      <textarea placeholder="Type here..."></textarea>
+      <div class="editable-div" contenteditable="true" data-placeholder="Type here..."></div>
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 This sentence has both spelling AND grammar errors - watch them all get highlighted!
+      </p>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 4: Regular Textarea (Basic Support)</h2>
+      <p>Try typing this:</p>
+      <div class="example">Whats you're favorite color? Mine is definately blue.</div>
+      <textarea placeholder="Type here... (shows error border only)"></textarea>
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">
+        ⚠️ Regular textareas show a red border when errors exist - click the field to see all errors
+      </p>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 5: Synonym Lookup (Double-click!) 📖</h2>
+      <p>Try double-clicking any word in the text below:</p>
+      <div class="editable-div" contenteditable="true" data-placeholder="Type 'The quick brown fox jumps over the lazy dog' then double-click any word..."></div>
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 Double-click "quick", "brown", "jumps", etc. to see synonyms instantly!
+      </p>
     </div>
   </div>
 
   <div class="note">
-    <strong>Note:</strong> This extension uses LanguageTool's free public API. 
-    There's a slight delay (1 second) after you stop typing before checking begins. 
-    The free API has rate limits, so avoid checking very frequently.
+    <strong>💡 Pro Tips:</strong><br>
+    • Inline highlighting only works in contenteditable fields (like Test 1-3 above)<br>
+    • Regular textareas still show a red border when errors exist (like Test 4)<br>
+    • Click any underlined error to fix it instantly<br>
+    • Click "🚫 Ignore" to dismiss false positives without fixing<br>
+    • Double-click ANY word (even correct ones!) to find synonyms<br>
+    • Add proper nouns to your custom dictionary to stop false positives<br>
+    • The extension uses LanguageTool's free public API
   </div>
 
   <script>
-    console.log('Jim\'s Language Tool Test Page loaded');
+    console.log('Jim\'s Language Tool Enhanced Test Page loaded');
     console.log('Current URL:', window.location.hostname);
-    console.log('Add this URL to the extension to enable checking');
+    console.log('Add this URL to the extension to enable inline highlighting');
+    
+    // Make contenteditable divs look more interactive
+    document.querySelectorAll('.editable-div').forEach(div => {
+      div.addEventListener('focus', () => {
+        div.style.borderColor = '#4a90e2';
+      });
+      div.addEventListener('blur', () => {
+        div.style.borderColor = '#e1e8ed';
+      });
+    });
   </script>
 </body>
 </html>
