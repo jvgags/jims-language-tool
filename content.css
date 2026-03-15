@@ -8,21 +8,21 @@
 }
 
 .jlt-spelling-error {
-  background-color: rgba(231, 76, 60, 0.15);
-  border-bottom: 2px wavy #e74c3c;
+  background-color: rgba(231, 76, 60, 0.35);
+  border-bottom: none;
 }
 
 .jlt-grammar-error {
-  background-color: rgba(52, 152, 219, 0.15);
-  border-bottom: 2px wavy #3498db;
+  background-color: rgba(241, 196, 15, 0.45);
+  border-bottom: none;
 }
 
 .jlt-error-highlight:hover {
-  background-color: rgba(231, 76, 60, 0.25);
+  background-color: rgba(231, 76, 60, 0.55);
 }
 
 .jlt-grammar-error:hover {
-  background-color: rgba(52, 152, 219, 0.25);
+  background-color: rgba(241, 196, 15, 0.65);
 }
 
 /* Tooltip styles */
