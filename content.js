@@ -115,34 +115,8 @@ function highlightErrorsInContentEditable(element, errors, text) {
   const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
   const cursorOffset = range ? getTextOffset(element, range.startContainer, range.startOffset) : null;
   
-  // Get all text nodes
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_TEXT,
-    null,
-    false
-  );
-  
-  const textNodes = [];
-  let node;
-  while (node = walker.nextNode()) {
-    textNodes.push(node);
-  }
-  
-  // Build a map of character positions to text nodes
-  let currentOffset = 0;
-  const offsetMap = [];
-  
-  for (const textNode of textNodes) {
-    const nodeText = textNode.textContent;
-    offsetMap.push({
-      node: textNode,
-      startOffset: currentOffset,
-      endOffset: currentOffset + nodeText.length,
-      text: nodeText
-    });
-    currentOffset += nodeText.length;
-  }
+  // Use the same walk as getPlainText — guaranteed identical offsets
+  const { offsetMap } = buildOffsetMap(element);
   
   // Apply highlights to errors (in reverse order to maintain offsets)
   const sortedErrors = [...errors].sort((a, b) => b.offset - a.offset);
@@ -195,9 +169,7 @@ function highlightErrorsInContentEditable(element, errors, text) {
       }
       
       parent.removeChild(textNode);
-      
-      // Update the node map for this change
-      nodeMap.node = highlight;
+      // Do NOT update nodeMap — reverse order means earlier errors unaffected
     }
   }
   
@@ -278,14 +250,44 @@ function removeHighlights(element) {
   });
 }
 
-// Get plain text from contenteditable (without highlight spans)
+// Block tags that need a space inserted after them so adjacent blocks
+// don't merge into one token (e.g. "Features" + "Rich" -> "FeaturesRich").
+const BLOCK_TAGS = new Set([
+  'P','DIV','H1','H2','H3','H4','H5','H6',
+  'LI','BLOCKQUOTE','TR','TD','TH','BR','HR'
+]);
+
+// Single source of truth for text extraction AND offset mapping.
+// One recursive walk produces both so they are always identical.
+// A space is appended after each block element as a word separator.
+function buildOffsetMap(element) {
+  const offsetMap = [];
+  let text = '';
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent;
+      if (t.length === 0) return;
+      offsetMap.push({ node, startOffset: text.length, endOffset: text.length + t.length, text: t });
+      text += t;
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const isBlock = BLOCK_TAGS.has(node.tagName);
+    for (const child of node.childNodes) walk(child);
+    if (isBlock && text.length > 0 && text[text.length - 1] !== ' ') {
+      // Synthetic separator — node:null so the highlighter skips it
+      offsetMap.push({ node: null, startOffset: text.length, endOffset: text.length + 1, text: ' ' });
+      text += ' ';
+    }
+  }
+
+  walk(element);
+  return { text: text.trimEnd(), offsetMap };
+}
+
 function getPlainText(element) {
-  const clone = element.cloneNode(true);
-  // Remove all highlight spans
-  clone.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(span => {
-    span.replaceWith(span.textContent);
-  });
-  return clone.innerText || clone.textContent || '';
+  return buildOffsetMap(element).text;
 }
 
 // Setup on an input
@@ -310,44 +312,52 @@ function setupElement(element) {
   };
   
   // Function to set text content
+  // Apply a fix surgically: find the exact text node containing the error
+  // via buildOffsetMap and splice only that node — preserving all HTML formatting.
+  const applyFix = (errorOffset, errorLength, replacement) => {
+    if (!isContentEditable && !isQuill) {
+      // Plain input/textarea — simple string replacement
+      const v = element.value;
+      element.value = v.substring(0, errorOffset) + replacement + v.substring(errorOffset + errorLength);
+      return;
+    }
+
+    // Remove highlights so buildOffsetMap sees clean text nodes
+    removeHighlights(element);
+
+    const { offsetMap } = buildOffsetMap(element);
+
+    // Find the text node that contains errorOffset
+    const entry = offsetMap.find(e => e.node && e.startOffset <= errorOffset && e.endOffset >= errorOffset + errorLength);
+    if (!entry) {
+      console.warn('[Jim\'s Language Tool] Could not find text node for fix at offset', errorOffset);
+      return;
+    }
+
+    const textNode = entry.node;
+    const localStart = errorOffset - entry.startOffset;
+    const localEnd   = localStart + errorLength;
+    const original   = textNode.textContent;
+
+    textNode.textContent = original.substring(0, localStart) + replacement + original.substring(localEnd);
+  };
+
   const setText = (newText) => {
-    if (isQuill || isContentEditable) {
-      // Remove highlights first
-      removeHighlights(element);
-      
-      // Save cursor position before replacing
-      const selection = window.getSelection();
-      const hadFocus = document.activeElement === element;
-      const cursorOffset = selection.rangeCount > 0 ? getTextOffset(element, selection.getRangeAt(0).startContainer, selection.getRangeAt(0).startOffset) : null;
-      
-      // Clear and set new text
-      element.textContent = newText;
-      
-      // Restore cursor position
-      if (hadFocus && cursorOffset !== null) {
-        try {
-          restoreCursor(element, Math.min(cursorOffset, newText.length));
-          element.focus();
-        } catch (e) {
-          // If cursor restore fails, just focus the element
-          element.focus();
-        }
-      }
-      
-      if (isQuill) {
-        element.dispatchEvent(new Event('text-change', { bubbles: true }));
-      }
-    } else {
+    // Legacy path used by synonym replacement on plain inputs
+    if (!isContentEditable && !isQuill) {
       element.value = newText;
     }
+    // For contenteditable, setText is no longer used for fixes —
+    // applyFix handles those surgically. This fallback is kept for
+    // any remaining callers but should rarely be hit.
   };
   
   const checkAndHighlight = async () => {
+    // Remove highlights FIRST so buildOffsetMap sees clean text nodes
+    if (isContentEditable) removeHighlights(element);
+
     const text = getText();
     if (!text || text.length < 3) {
-      if (isContentEditable) {
-        removeHighlights(element);
-      }
       element.style.borderBottom = '';
       delete element.dataset.jltErrors;
       return;
@@ -407,7 +417,7 @@ function setupElement(element) {
     
     // Otherwise show all errors
     if (element.dataset.jltErrors) {
-      showTooltip(element, JSON.parse(element.dataset.jltErrors), getText, setText, e);
+      showTooltip(element, JSON.parse(element.dataset.jltErrors), getText, applyFix, e);
     }
   });
   
@@ -427,7 +437,7 @@ function setupElement(element) {
       const synonyms = await getSynonyms(selectedText);
       
       if (synonyms.length > 0) {
-        showSynonymPopup(e, selectedText, synonyms, element, getText, setText);
+        showSynonymPopup(e, selectedText, synonyms, element, getText, applyFix);
       }
     }
   });
@@ -611,7 +621,7 @@ function findRootEditableElement(node) {
 }
 
 // Show synonym popup
-function showSynonymPopup(event, word, synonyms, element, getText, setText) {
+function showSynonymPopup(event, word, synonyms, element, getText, applyFix) {
   document.querySelectorAll('.jlt-synonym-popup').forEach(p => p.remove());
   
   const popup = document.createElement('div');
@@ -634,19 +644,15 @@ function showSynonymPopup(event, word, synonyms, element, getText, setText) {
     btn.addEventListener('click', () => {
       const synonym = btn.dataset.synonym;
       
-      // Get current text
+      // Find word offset in the current text and apply surgically
       const currentText = getText();
-      
-      // Find the word in the text and replace it
       const wordRegex = new RegExp('\\b' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
-      const newText = currentText.replace(wordRegex, synonym);
-      
-      // Set the new text
-      setText(newText);
-      
+      const match = wordRegex.exec(currentText);
+      if (match) {
+        applyFix(match.index, match[0].length, synonym);
+      }
       popup.remove();
       showSuccess({ bottom: event.clientY, left: event.clientX }, 'Replaced!');
-      
       setTimeout(() => element.dispatchEvent(new Event('input', { bubbles: true })), 100);
     });
   });
@@ -663,7 +669,7 @@ function showSynonymPopup(event, word, synonyms, element, getText, setText) {
 }
 
 // Show tooltip with all suggestions
-function showTooltip(element, errors, getText, setText, clickEvent) {
+function showTooltip(element, errors, getText, applyFix, clickEvent) {
   document.querySelectorAll('.jlt-tooltip').forEach(t => t.remove());
   
   if (!errors || errors.length === 0) return;
@@ -725,13 +731,9 @@ function showTooltip(element, errors, getText, setText, clickEvent) {
       const replacement = btn.dataset.replacement;
       const error = errors[idx];
       
-      const currentText = getText();
-      const newText = currentText.substring(0, error.offset) + replacement + currentText.substring(error.offset + error.length);
-      setText(newText);
-      
+      applyFix(error.offset, error.length, replacement);
       element.dispatchEvent(new Event('input', { bubbles: true }));
       tooltip.remove();
-      
       showSuccess(rect, 'Fixed!');
     });
   });
@@ -784,7 +786,7 @@ function showTooltip(element, errors, getText, setText, clickEvent) {
         element.dataset.jltErrors = JSON.stringify(errors);
         // Refresh tooltip with remaining errors
         tooltip.remove();
-        showTooltip(element, errors, getText, setText, clickEvent);
+        showTooltip(element, errors, getText, applyFix, clickEvent);
       }
       
       showSuccess(rect, 'Error ignored');
@@ -817,13 +819,9 @@ function showTooltip(element, errors, getText, setText, clickEvent) {
             const replacement = synBtn.dataset.replacement;
             const error = errors[idx];
             
-            const currentText = getText();
-            const newText = currentText.substring(0, error.offset) + replacement + currentText.substring(error.offset + error.length);
-            setText(newText);
-            
+            applyFix(error.offset, error.length, replacement);
             element.dispatchEvent(new Event('input', { bubbles: true }));
             tooltip.remove();
-            
             showSuccess(rect, 'Replaced!');
           });
         });
