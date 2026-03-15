@@ -473,8 +473,7 @@ function showSingleErrorTooltip(highlight, error, getText, setText, clickEvent) 
   
   // Position tooltip
   const rect = highlight.getBoundingClientRect();
-  tooltip.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-  tooltip.style.left = (rect.left + window.scrollX) + 'px';
+  smartPosition(tooltip, rect.bottom, rect.left);
   
   // Add click handlers for fix buttons
   tooltip.querySelectorAll('.jlt-fix-btn').forEach(btn => {
@@ -629,8 +628,7 @@ function showSynonymPopup(event, word, synonyms, element, getText, setText) {
   popup.innerHTML = html;
   document.body.appendChild(popup);
   
-  popup.style.top = (event.clientY + window.scrollY + 8) + 'px';
-  popup.style.left = (event.clientX + window.scrollX) + 'px';
+  smartPosition(popup, event.clientY, event.clientX);
   
   popup.querySelectorAll('.jlt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -718,8 +716,7 @@ function showTooltip(element, errors, getText, setText, clickEvent) {
     rect = element.getBoundingClientRect();
   }
   
-  tooltip.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-  tooltip.style.left = (rect.left + window.scrollX) + 'px';
+  smartPosition(tooltip, rect.bottom, rect.left);
   
   // Add click handlers for fix buttons
   tooltip.querySelectorAll('.jlt-fix-btn').forEach(btn => {
@@ -860,6 +857,50 @@ function showSuccess(rect, message) {
   success.style.top = (rect.bottom + window.scrollY + 8) + 'px';
   success.style.left = (rect.left + window.scrollX) + 'px';
   setTimeout(() => success.remove(), 1500);
+}
+
+// Position a tooltip/popup so it never overflows the viewport.
+// The element must already be in the DOM. We park it off-screen first
+// so offsetHeight is accurate before we commit to a position.
+function smartPosition(el, anchorClientY, anchorClientX) {
+  // Park off-screen so the browser renders & measures it without a flash
+  el.style.visibility = 'hidden';
+  el.style.top  = '-9999px';
+  el.style.left = '-9999px';
+
+  // Force layout so offsetHeight/Width are real
+  const elH = el.offsetHeight;
+  const elW = el.offsetWidth;
+  const vw  = window.innerWidth;
+  const vh  = window.innerHeight;
+  const GAP = 8;
+
+  // Vertical: prefer below, flip above only if it genuinely doesn't fit
+  let top;
+  const spaceBelow = vh - anchorClientY - GAP;
+  const spaceAbove = anchorClientY - GAP;
+
+  if (spaceBelow >= elH || spaceBelow >= spaceAbove) {
+    // Enough room below — or more room below than above — go below
+    top = anchorClientY + window.scrollY + GAP;
+  } else {
+    // More room above, flip it
+    top = anchorClientY + window.scrollY - elH - GAP;
+  }
+
+  // Never scroll off the top
+  if (top < window.scrollY + GAP) top = window.scrollY + GAP;
+
+  // Horizontal: clamp so right edge stays inside viewport
+  let left = anchorClientX + window.scrollX;
+  if (anchorClientX + elW + GAP > vw) {
+    left = window.scrollX + vw - elW - GAP;
+  }
+  if (left < window.scrollX + GAP) left = window.scrollX + GAP;
+
+  el.style.top        = top  + 'px';
+  el.style.left       = left + 'px';
+  el.style.visibility = '';
 }
 
 // Escape HTML for display
